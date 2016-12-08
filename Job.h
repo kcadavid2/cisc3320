@@ -1,10 +1,3 @@
-/*
- * Job.h
- *
- *  Created on: Nov 18, 2016
- *      Author: sunnyshapir
- */
-
 #ifndef JOB_H_
 #define JOB_H_
 
@@ -32,6 +25,7 @@ class Job {
 			jobSize = NULL;
 			maxCPU = NULL;
 			currentTime = NULL;
+			//must get memory location from memory handler
 			memoryLocation = -1;
 			inMem = false;
 			doingIo = false;

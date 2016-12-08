@@ -1,10 +1,3 @@
-/*
- * os.cpp
- *
- *  Created on: Nov 24, 2016
- *      Author: sunnyshapir
- */
-
 #include <iostream>
 #include <vector>
 #include <queue>
@@ -23,11 +16,16 @@ cpuScheduler scheduler;
 
 void startup ();
 void Crint (long &a, long p[]);
+void Svc (long &a, long p[]);
+long findByNumber (long jobNumber);
 void addToJobTable (Job newJob);
 void bookKeep (long time);
 void swapper ();
-void refreshJobTable ();
 void runJob (long &a, long p[], Job toRun);
+void terminateJob (long jobNumber);
+void refreshJobTable ();
+bool isOnIoQueue (long jobNumber);
+void siodisk(long JobNum);
 
 void startup () {
 	currentJobRunning = -1;
@@ -45,6 +43,66 @@ void Crint (long &a, long p[]) {
 	runJob (a, p, scheduler.scheduleCpu (readyQueue));
 }
 
+void Svc (long &a, long p[]) {
+	bookKeep(p[5]);
+	//vector<Job>::iterator it = jobTable.begin();
+	long currentJobIndex = findByNumber(p[1]);
+	switch (a) {
+	case '5':
+		//take job off ready queue, take job out of jobtable, deallocate memory
+		terminateJob (p[1]);
+		break;
+	case '6':
+		//take job off ready queue, add to ioqueue, call appropriate sos function
+		requestIo (p[1]);
+		break;
+	case '7':
+		//if job is currently doing IO or is on IO Queue, block
+		if (jobTable.at(currentJobIndex).getDoingIo() || isOnIoQueue(p[1]))
+			jobTable.at(currentJobIndex).setIsBlocked (true);
+		break;
+	}
+	runJob(a, p, scheduler.scheduleCpu (readyQueue));
+	return;
+}
+
+void requestIo (long jobNumber) {
+	long jobIndex = findByNumber(jobNumber);
+	if (ioQueue.empty())
+		siodisk (jobNumber);
+	else
+		ioQueue.push(jobTable.at(jobIndex));
+	(jobTable.at(jobIndex)).setDoingIo(true);
+}
+
+void terminateJob (long jobNumber) {
+	long jobIndex = findByNumber(jobNumber);
+	if (jobNumber != -1 && !isOnIoQueue(jobNumber)) {
+		(jobTable.at(jobIndex)).setIsTerminated (true);
+		//DEALLOCATE MEMORY HERE!!!
+	}
+	else if (jobNumber != -1)
+		(jobTable.at(jobIndex)).setIsTerminated (true);
+}
+
+//Returns index of job in the job table
+long findByNumber (long jobNumber) {
+	//vector<Job>::iterator it = jobTable.begin();
+	for (long i = 0; i < jobTable.size(); i++) {
+		if ((jobTable.at(i)).getJobNumber() == jobNumber)
+			return i;
+	}
+	return -1;
+}
+
+bool isOnIoQueue (long jobNumber) {
+	for (vector<Job>::iterator i = ioQueue.begin(); i != ioQueue.end(); i++) {
+		if (ioQueue.at(*i) == jobNumber)
+			return true;
+	}
+	return false;
+}
+
 void addToJobTable (Job newJob) {
 	long index = newJob.getJobNumber();
 	vector<Job>::iterator it = jobTable.begin();
@@ -53,10 +111,10 @@ void addToJobTable (Job newJob) {
 
 void bookKeep (long time) {
 	if (currentJobRunning != -1) {
-		vector<Job>::iterator it = jobTable.begin();
-		long timeSpent = time - jobTable[it + currentJobRunning].getCurrentTime();
-		jobTable[it + currentJobRunning].setCurrentTime(jobTable[it + currentJobRunning].getCurrentTime() + timeSpent);
-		jobTable[it + currentJobRunning].setMaxCpu(jobTable[it + currentJobRunning].getMaxCpu() - timeSpent);
+		//vector<Job>::iterator it = jobTable.begin();
+		long timeSpent = time - (jobTable.at(currentJobRunning)).getCurrentTime();
+		(jobTable.at(currentJobRunning)).setCurrentTime((jobTable.at(currentJobRunning)).getCurrentTime() + timeSpent);
+		(jobTable.at(currentJobRunning)).setMaxCpu((jobTable.at(currentJobRunning)).getMaxCpu() - timeSpent);
 	}
 }
 
@@ -69,7 +127,8 @@ void runJob (long &a, long p[], Job toRun) {
 		p[3] = toRun.getJobSize();
 		p[4] = 50;
 		currentJobRunning = toRun.getJobNumber();
-		//take job off of ready queue here? readyQueue.pop();
+		if ((readyQueue.front()).getJobNumber() == toRun.getJobNumber())
+			readyQueue.pop();
 	}
 	return;
 }
@@ -77,7 +136,7 @@ void runJob (long &a, long p[], Job toRun) {
 void refreshJobTable () {
 	for (long i = 0; i < jobTable.size(); i++) {
 		vector<Job>::iterator it = jobTable.begin();
-		if (jobTable[it + i].getIsTerminated())
-			jobTable[it + i].erase(it + i);
+		if ((jobTable.at(i)).getIsTerminated())
+			(jobTable.at(i)).erase(it + i);
 	}
 }
