@@ -23,6 +23,7 @@ class cpuScheduler {
 				if ((ready.front()).getInMem())
 					if (!(ready.front()).getIsBlocked() && !(ready.front()).getDoingIo()) {
 						toRun = ready.front();
+						break;
 					}
 				ready.pop();
 			}
