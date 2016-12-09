@@ -17,6 +17,7 @@ cpuScheduler scheduler;
 void startup ();
 void Crint (long &a, long p[]);
 void Svc (long &a, long p[]);
+void Tro(long &a, long p[])
 long findByNumber (long jobNumber);
 void addToJobTable (Job newJob);
 void bookKeep (long time);
@@ -26,6 +27,7 @@ void terminateJob (long jobNumber);
 void refreshJobTable ();
 bool isOnIoQueue (long jobNumber);
 void siodisk(long JobNum);
+void remJobFromJobTable (long position);
 
 void startup () {
 	currentJobRunning = -1;
@@ -63,6 +65,16 @@ void Svc (long &a, long p[]) {
 		break;
 	}
 	runJob(a, p, scheduler.scheduleCpu (readyQueue));
+	return;
+}
+
+void Tro(long &a, long p[]) {
+	bookKeep(p[5]);
+	if(!jobTable[currentJobRunning].  // (<--GET # OF PENDING IO REQUESTS!! IF 0 THEN CARRY OUT BELOW LINE)
+	   remJobFromJobTable(currentJobRunning);
+	else
+	   jobTable[currentJobRunning].setIsTerminated(true);//else terminate job
+	runJob (a, p, scheduler.scheduleCpu (readyQueue));
 	return;
 }
 
@@ -108,6 +120,12 @@ void addToJobTable (Job newJob) {
 	vector<Job>::iterator it = jobTable.begin();
 	jobTable.insert(it + index, newJob);
 }
+	   
+void remJobFromJobTable (long position){
+	removeJob(currentJobRunning, currentJobRunning[position].getPosition(), currentJobRunning[position].getSize());
+	jobTable.erase(jobTable.begin()+position);
+	return;
+}	
 
 void bookKeep (long time) {
 	if (currentJobRunning != -1) {
@@ -118,6 +136,7 @@ void bookKeep (long time) {
 	}
 }
 
+//Dispatcher: sets CPU registers and runs job
 void runJob (long &a, long p[], Job toRun) {
 	if (readyQueue.empty() || toRun == NULL)
 		a = 1;
