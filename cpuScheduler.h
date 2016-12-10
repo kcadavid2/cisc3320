@@ -1,10 +1,3 @@
-/*
- * cpuScheduler.h
- *
- *  Created on: Dec 4, 2016
- *      Author: sunnyshapir
- */
-
 #ifndef CPUSCHEDULER_H_
 #define CPUSCHEDULER_H_
 #include <iostream>
