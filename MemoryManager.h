@@ -22,7 +22,7 @@ public:
 
 // Initialize all chunks of memory to 0  
 void initJobsArray(){
-	for (int i = 0; i < num; i++){
+	for (int i = 0; i < memoryChunk; i++){
 		arrayOfJobs[i]=0;
 	}
 }
@@ -33,7 +33,7 @@ int getFreeMemory(){
     
 	int blocks = 0;
     
-	for (int i = 0; i < num; i++){
+	for (int i = 0; i < memoryChunk; i++){
 		if (arrayOfJobs[i] == 0){
 			blocks++;
 		}
@@ -57,7 +57,7 @@ bool jobFit(Job &j){
     
 //Print Memory Management Table
 void printMemoryTable(){
-	for (int i =0; i <num; i++){
+	for (int i =0; i <memoryChunk; i++){
 		cout << "Place in Memory | " << i << " | Job Number: | " <<  arrayOfJobs[i] << endl;
 	}
 }
