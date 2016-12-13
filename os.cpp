@@ -13,7 +13,7 @@ long currentJobRunning;
 long currentJobIo;
 queue<Job> readyQueue;
 queue<Job> ioQueue;
-queue<Job> memoryQueue;
+//queue<Job> memoryQueue;
 
 void startup ();
 void Crint (long &a, long p[]);
@@ -97,6 +97,7 @@ void terminateJob (long jobNumber) {
 	}
 	else if (jobNumber != -1)
 		(jobTable.at(jobIndex)).setIsTerminated (true);
+	refreshJobTable();
 }
 
 //Returns index of job in the job table
@@ -153,11 +154,19 @@ void refreshJobTable () {
 		if ((jobTable.at(i)).getIsTerminated())
 			(jobTable.at(i)).erase(it + i);
 	}
-	queue<Job> memQueue = memoryQueue;
+/*	queue<Job> memQueue = memoryQueue;
 	while (!memQueue.empty()) {
 		if (memory.jobFit(memQueue.front()) && !(memQueue.front()).getInMem())
 			swapper ((memQueue.front().getJobNumber()));
 		memQueue.pop();
+	}*/
+	
+	//Finding space without memory queue
+	vector<Job>::iterator it = jobTable.begin();
+	while (it != jobTable.end()) {
+		if (!(jobTable.at(it)).getInMem())
+			if (!(jobTable.at(it)).getIsBlocked() && !(jobTable.at(it)).getDoingIo() && !(jobTable.at(it)).getIsTerminated())
+				swapper((jobTable.at(it)).getJobNumber());
 	}
 }
 
@@ -175,9 +184,10 @@ void swapper (long jobNum) {
 		siodrum ((jobTable.at(jobIndex)).getJobNumber(), (jobTable.at(jobIndex)).getJobSize(), (jobTable.at(jobIndex)).getMemoryLocation(), 0);
 		(jobTable.at(jobIndex)).setInMem(true);
 	}
-	//Add job to memory queue to wait for spot to free up
+	//Note that job is not in memory and wait for memory to free up
 	else if (!memory.jobFit(jobTable.at(jobIndex), mem, 100) && !(jobTable.at(jobIndex)).getInMem()) {
-		memoryQueue.push(jobTable.at(jobIndex));
+		//memoryQueue.push(jobTable.at(jobIndex));
+		(jobTable.at(jobIndex)).setInMem(false);
 	}
 	//Swap requested from memory to drum
 	else {
