@@ -27,13 +27,9 @@ void runJob (long &a, long p[], Job toRun);
 void terminateJob (long jobNumber);
 void refreshJobTable ();
 bool isOnIoQueue (long jobNumber);
-<<<<<<< HEAD
 void siodisk (long JobNum);
 void siodrum (long JobNum, long JobSize, long StartCoreAddr, long TransferDir);
-=======
-void siodisk(long JobNum);
 void remJobFromJobTable (long position);
->>>>>>> origin/CISC3320
 
 void startup () {
 	currentJobRunning = -1;
