@@ -6,67 +6,80 @@ using namespace std;
 
 
 class MemoryManager{
+
 public: 
     
-    // NEED PLACE TO PUT STATIC VARIABLE FOR SIZE OF ARRAY (100)
-    // WHERE TO PUT?
-    // static int numofJobs = 100;
     
-    int arrayOfJobs[/* numofJobs */]; 
+    int memoryChunk= 100;
+    int arrayOfJobs[memoryChunk]; 
 
 
-// -----------------------------------------
-// INTIALIZE MEMORY ARRAY TO JOB ID
-void initJobsArray( int a[] , int num ){
-	for (int i = 0; i < num; i++){
-		a[i]=0;
+    MemoryManager(){
+        initJobsArray();
+    }
+    
+    
+
+// Initialize all chunks of memory to 0  
+void initJobsArray(){
+	for (int i = 0; i < memoryChunk; i++){
+		arrayOfJobs[i]=0;
 	}
 }
     
 
-// -----------------------------------------
-// RETURN AMOUNT OF MEMORY
-int getFreeMemory(int* x, int num){
-	int memoryBlocks = 0;
-	// COUNT FREE MEMORY BLOCKS
-	for (int i = 0; i < num; i++){
-		if (x[i] == 0){
-			memoryBlocks++;
+// Returns the amount of free memory chunks
+int getFreeMemory(){
+    
+	int blocks = 0;
+    
+	for (int i = 0; i < memoryChunk; i++){
+		if (arrayOfJobs[i] == 0){
+			blocks++;
 		}
 	}
-	// CALCULATE AMOUNT OF MEMORY
-	memoryBlocks = memoryBlocks*1000;
-	return  memoryBlocks;
+
+	blocks = blocks*1000;
+    
+    return  memoryBlocks;
 }
 
-// -----------------------------------------
-// TEST IF JOB WILL FIT INTO MEMORY
-bool jobFit(Job &j, int* arr, int arrSize){
-	// IF JOBS < FREE MEMORY AVAILABLE RETURN TRUE ELSE RETURN FALSE
-	if (j.size < getFreeMemory(arr,arrSize)){
+// Tests if Job will fit into memory
+bool jobFit(Job &j){
+    if (j.jobSize < getFreeMemory()){
 		return true;
 	} else {
-		cout << "Not enough memory to store job!" <<endl;
 		return false;
 	}
 }
 
-// -----------------------------------------
-// PLACE JOB INTO MEMORY
-void placeJob(Job &j, int* arr, int arrSize){
-	// DIVIDES JOB SIZE BY 1000 TO DETERMINE HOW MANY MEMORY LOCATIONS JOB WILL USE
-	int x = j.size /1000;
 
-	// TEST IF JOB WILL FIT INTO MEMORY
-	// COMPARING JOB SIZE WITH TOTAL MEMORY AVAILABLE
-	if (jobFit(j,arr,arrSize)){
-
-		// INSERT JOB LOCATIONS INTO A SET AND INTO MEMORY LOCATION
-		for (int i=0; i < arrSize; i++){
-			if (arr[i] == 0 && x !=0){
-				arr[i] = j.id;
-				j.joblocations.insert(i);
-				x--;
+    
+//Print Memory Management Table
+void printMemoryTable(){
+	for (int i =0; i <memoryChunk; i++){
+		cout << "Place in Memory | " << i << " | Job Number: | " <<  arrayOfJobs[i] << endl;
+	}
+}
+    
+////// ------------------ currently working on
+// Place job into memory
+void placeJob(Job &j){
+	// Divides job size by 1000 to find how many memory chunks it will use
+	int x = j.jobSize /1000;
+    int counter = 0;
+    
+	// Test if job will fit into memory
+	if (jobFit(j)){
+        
+		for (int i=0; i<memoryChunk; i++){
+			if (arrayOfJobs[i] == 0 && x !=0){
+				
+                arrayOfJobs[i] = j.jobNumber;
+				
+                j.joblocations.insert(i);
+				
+                x--;
 			}
 		}
 		set<int>::iterator it;
@@ -84,13 +97,8 @@ void placeJob(Job &j, int* arr, int arrSize){
 }
 
 
-// --------------------------------------------
-//PRINT MEMORY MANAGEMENT TABLE
-void printMemoryTable(int* arr, int num){
-	for (int i =0; i <num; i++){
-		cout << "Place in Memory | " << i << " | Job ID # | " <<  arr[i] << endl;
-	}
-}
+
+
 
 // ---------------------------------------------
 // REMOVES JOB FROM MEMORY
@@ -102,7 +110,7 @@ void removeJob(Job &j, int* arr,int arrSize){
 
 	// SET JOBID OF JOB LOCATIONS IN ARRAY TO 0
 	// (REMOVING JOB ID FROM LOCATION IN MEMORY)
-	if (j.id !=0){
+	if (j.jobNumber !=0){
 		while(it != j.joblocations.end()){
 			arr[*it] =0;
 			++it;
@@ -111,7 +119,7 @@ void removeJob(Job &j, int* arr,int arrSize){
 		cout << "Invalid JobID, no job in memory location." <<endl;
 	}
 	// PRINT OUT JOBID REMOVAL CONFIRMATION
-	std::cout << "Job with id# " << j.id << " and size " <<  j.size << "k was successfully removed from memory" << endl;
+	std::cout << "Job Number" << j.jobNumber << " and size " <<  j.jobSize << "k was successfully removed from memory" << endl;
 
 	// PRINTS OUT FREE MEMORY AVAILABLE AFTER JOB REMOVAL
 	std::cout << "You now have " << getFreeMemory(arr,arrSize) << " of free memory available" <<endl;
