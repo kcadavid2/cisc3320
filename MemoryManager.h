@@ -63,7 +63,10 @@ void printMemoryTable(){
 }
     
     
-
+// Small Error in code ** still working on**
+// Jobs are placed into memory but in certain cases 
+// the job will not place jobNumber into the last slot of memmory it will consume
+    
 // Places Job Into Memory
 void placeJob(Job &j){
 
@@ -83,7 +86,6 @@ void placeJob(Job &j){
         // If current array position doesnt have jobNumber
 		if (arr[i] == 0){
             
-            
 			n = (int*)&arr[i];
             
             // Loop to find contiguous memory slots
@@ -91,7 +93,6 @@ void placeJob(Job &j){
 				counter++;
 				n++;
 			}
-            
             
             // If there is enough contiguous memory, place job into array
 			if (counter == sizeOfJob){
@@ -115,19 +116,22 @@ void placeJob(Job &j){
 
                     // Print memory Table
                     printMemoryTable();
-                
+                    
+                    // Set in memory for job to ture
                     j.inMem =true;
+                
+                    // Break out of loop
                     break;
 			
                 }  else   {
                     
-                    // Go to next 
+                    // Go to next iteration of loop
                     continue;
 			     }
 		      } else {
 			         std::cout << "Job with id: " << j.id << " cannot be placed into memory @ " << i <<endl;
-			continue;
-		}
+			         continue;
+		      }
 	}
     
     // Set pointer to null
