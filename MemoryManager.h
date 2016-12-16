@@ -62,6 +62,9 @@ void printMemoryTable(){
 	}
 }
     
+    
+/*    
+    
 ////// ------------------ currently working on
 // Place job into memory
 void placeJob(Job &j){
@@ -99,36 +102,58 @@ void placeJob(Job &j){
 
 
 
+*/
 
-// ---------------------------------------------
-// REMOVES JOB FROM MEMORY
-void removeJob(Job &j, int* arr,int arrSize){
-	std::cout << "Memory available before job removal: " << getFreeMemory(arr,arrSize) << "k" <<endl;
+// Removes job from memory 
+void removeJob(Job &j){
+    
+    // Counter to keep track of memory locations deleted in array 
+	int counter =0;
+    
+    // Pointer to the memory location of the job in the array 
+	int *pointer = (int*)&arr[j.memLocation];
 
-	// ITERATOR TO GO THROUGH JOB LOCATIONS IN MEMORY MANAGER
-	set<int>::iterator it = j.joblocations.begin();
+    // Test if job is in memory
+    if (j.inMem){
+           
+        // Compare counter to jobSize
+        while (counter != j.jobSize){
+           
+            // Set memory location to 0
+            // Removes jobID# from current array location
+            *pointer=0;
+            
+            // Increment pointer to memory location of the job within the array
+            point++;
+            
+            // Increment counter 
+            counter++;
+	   }
+        // Set pointer to null
+        point = NULL;
+    }
+    
+    // Take job out of memory
+    j.inMem = false;
 
-	// SET JOBID OF JOB LOCATIONS IN ARRAY TO 0
-	// (REMOVING JOB ID FROM LOCATION IN MEMORY)
-	if (j.jobNumber !=0){
-		while(it != j.joblocations.end()){
-			arr[*it] =0;
-			++it;
-		}
-	} else {
-		cout << "Invalid JobID, no job in memory location." <<endl;
-	}
-	// PRINT OUT JOBID REMOVAL CONFIRMATION
-	std::cout << "Job Number" << j.jobNumber << " and size " <<  j.jobSize << "k was successfully removed from memory" << endl;
-
-	// PRINTS OUT FREE MEMORY AVAILABLE AFTER JOB REMOVAL
-	std::cout << "You now have " << getFreeMemory(arr,arrSize) << " of free memory available" <<endl;
-
-	// PRINT MEMORY TABLE
-	printMemoryTable(arr,arrSize);
 }
 
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 };
 
 #endif
