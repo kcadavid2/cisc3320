@@ -102,9 +102,9 @@ void placeJob(Job &j){
 
 // ---------------------------------------------
 // REMOVES JOB FROM MEMORY
-void removeJob(Job &j, int* arr,int arrSize){
+void removeJob(Job &j){
 	std::cout << "Memory available before job removal: " << getFreeMemory(arr,arrSize) << "k" <<endl;
-
+/*
 	// ITERATOR TO GO THROUGH JOB LOCATIONS IN MEMORY MANAGER
 	set<int>::iterator it = j.joblocations.begin();
 
@@ -128,7 +128,20 @@ void removeJob(Job &j, int* arr,int arrSize){
 	printMemoryTable(arr,arrSize);
 }
 
+*/
+    
+    int counter =0;
+	
+    int *point = (int*)&arr[j.memLocation];
 
+	while (counter != j.size){
+		*point=0;
+		point++;
+		counter++;
+	}
+	point = NULL;
+    
+    printMemoryTable();
 };
 
 #endif
