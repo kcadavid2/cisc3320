@@ -65,12 +65,12 @@ void printMemoryTable(){
     
 // Small Error in code ** still working on**
 // Jobs are placed into memory but in certain cases 
-// the job will not place jobNumber into the last slot of memmory it will consume
+// the job will not place jobNumber into the last slot of memory it will consume
     
 // Places Job Into Memory
 void placeJob(Job &j){
 
-	int counter =0;
+	int counter;
 
     // Store size and jobNumber
 	int sizeOfJob = j.jobSize;
@@ -137,10 +137,6 @@ void placeJob(Job &j){
     // Set pointer to null
     n=NULL;
 }
-
-
-// There is a small error int this code 
-// Jobs 
     
 // Removes job from memory 
 void removeJob(Job &j){
