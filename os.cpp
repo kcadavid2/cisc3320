@@ -79,10 +79,19 @@ void Svc (long &a, long p[]) {
 
 void Tro(long &a, long p[]) {
 	bookKeep(p[5]);
-	if(!jobTable[currentJobRunning].  // (<--GET # OF PENDING IO REQUESTS!! IF 0 THEN CARRY OUT BELOW LINE)
+	if(!jobTable.at(jobIndex)).getDoingIO();//is job doing IO
 	   remJobFromJobTable(currentJobRunning);
 	else
-	   jobTable[currentJobRunning].setIsTerminated(true);//else terminate job
+	   jobTable.at(jobIndex)).setIsTerminated(true);//else terminate job
+	runJob (a, p, scheduler.scheduleCpu (readyQueue));
+	return;
+}
+
+void Drmint (long &a, long p[]){
+	bookKeep(p[5]);
+	
+	//**drum is no longer busy; job is now in memory**
+	
 	runJob (a, p, scheduler.scheduleCpu (readyQueue));
 	return;
 }
@@ -135,7 +144,8 @@ void addToJobTable (Job newJob) {
 	vector<Job>::iterator it = jobTable.begin();
 	jobTable.insert(it + index, newJob);
 }
-	   
+
+//need to edit removeJob params	   
 void remJobFromJobTable (long position){
 	removeJob(currentJobRunning, currentJobRunning[position].getPosition(), currentJobRunning[position].getSize());
 	jobTable.erase(jobTable.begin()+position);
