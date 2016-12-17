@@ -96,6 +96,30 @@ void Drmint (long &a, long p[]){
 	return;
 }
 
+void Dskint (long &a, long p[]){
+	bookKeep(p[5]);
+	long ioQueueJobIndex;
+	ioQueueJobNext(); // set the index
+	
+	//if job has no more pending I/O requests, unblock it
+	if(!ioQueueJobIndex.getDoingIO();
+	   jobTable.at(currentJobIndex).setIsBlocked (false);
+	
+	//if job is terminated and has no more pending I/O requests, remove it from job table
+	if(jobTable.at(jobIndex)).setIsTerminated(true); && (!jobTable.at(jobIndex)).getDoingIO();
+	   remJobFromJobTable (jobTable.at(jobIndex))
+	   
+	//remove the job from the top of the I/O queue   
+	ioQueue.pop();
+	//as long as ioqueue is not empty, get the job index of the next job and send it to SOS
+	if (!ioQueue.empty()){
+		ioQueueJobNext();
+		siodisk(jobTable.at(currentJobIndex));
+	}
+	runJob (a, p, scheduler.scheduleCpu (readyQueue));
+	return;
+}
+		   
 void requestIo (long jobNumber) {
 	long jobIndex = findByNumber(jobNumber);
 	if (jobIndex == -1) {
@@ -144,13 +168,20 @@ void addToJobTable (Job newJob) {
 	vector<Job>::iterator it = jobTable.begin();
 	jobTable.insert(it + index, newJob);
 }
-
-//need to edit removeJob params	   
+	   
 void remJobFromJobTable (long position){
-	removeJob(currentJobRunning, currentJobRunning[position].getPosition(), currentJobRunning[position].getSize());
+	removeJob((jobTable.at(currentJobRunning)));
 	jobTable.erase(jobTable.begin()+position);
 	return;
-}	
+}
+		   
+//sets the job index of the job in the front of the IO Queue
+void ioQueueJobNext() {
+    for(long i = 0; i < jobTable.size(); i++)
+        if (jobTable[i].findByNumber() == ioQueue.front())
+            ioQueueJobIndex = i;
+	return;
+}
 
 void bookKeep (long time) {
 	if (currentJobRunning != -1) {
