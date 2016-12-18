@@ -19,6 +19,7 @@ void startup ();
 void Crint (long &a, long p[]);
 void Svc (long &a, long p[]);
 void Tro(long &a, long p[])
+void Dskint(long &a, long p[])
 long findByNumber (long jobNumber);
 void addToJobTable (Job newJob);
 void bookKeep (long time);
@@ -30,6 +31,7 @@ bool isOnIoQueue (long jobNumber);
 void siodisk (long JobNum);
 void siodrum (long JobNum, long JobSize, long StartCoreAddr, long TransferDir);
 void remJobFromJobTable (long position);
+void ioQueueJobNext();
 
 void startup () {
 	currentJobRunning = -1;
