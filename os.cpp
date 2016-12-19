@@ -64,7 +64,7 @@ void Crint (long &a, long p[]) {
 void Svc (long &a, long p[]) {
 	bookKeep(p[5]);
 	long currentJobIndex = findByNumber(p[1]);
-	if (jobIndex == -1) {
+	if (currentJobIndex == -1) {
 		cout << "Job is not in jobTable" << endl;
 		return;
 	}
@@ -89,6 +89,7 @@ void Svc (long &a, long p[]) {
 
 void Tro(long &a, long p[]) {
 	bookKeep(p[5]);
+	long jobIndex = findByNumber (jobNumber);
 	if(!jobTable.at(jobIndex)).getDoingIO();//is job doing IO
 	   remJobFromJobTable(currentJobRunning);
 	else
@@ -134,7 +135,7 @@ void Dskint (long &a, long p[]){
 //waiting to do IO), then siodisk is called to initiate IO. Otherwise, job is pushed onto IO queue to wait for IO.
 //Whether job is currently doing IO or is waiting to do IO, the doingIo member variable of the corresponding Job class is set to true
 void requestIo (long jobNumber) {
-	long jobIndex = findByNumber(jobNumber);
+	long jobIndex = findByNumber (jobNumber);
 	if (jobIndex == -1) {
 		cout << "Job is not in jobTable" << endl;
 		return;
@@ -152,7 +153,7 @@ void requestIo (long jobNumber) {
 //a real job and the job is not waiting to do IO, the job is terminated and memory is deallocated using memory manager.
 //Otherwise, if jobNumber corresponds to a real job, terminate. Job table is cleaned up afterwards.
 void terminateJob (long jobNumber) {
-	long jobIndex = findByNumber(jobNumber);
+	long jobIndex = findByNumber (jobNumber);
 	if (jobNumber != -1 && !isOnIoQueue(jobNumber)) {
 		(jobTable.at(jobIndex)).setIsTerminated (true);
 		//DEALLOCATE MEMORY HERE!!!
