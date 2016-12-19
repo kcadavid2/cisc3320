@@ -12,6 +12,9 @@ long currentJobRunning;
 long currentJobIo;
 queue<Job> readyQueue;
 queue<Job> ioQueue;
+cpuScheduler scheduler;
+MemoryManager memory;
+long drumOrCore;
 
 void startup ();
 void Crint (long &a, long p[]);
@@ -31,13 +34,12 @@ void siodrum (long JobNum, long JobSize, long StartCoreAddr, long TransferDir);
 void remJobFromJobTable (long position);
 void ioQueueJobNext();
 
-//Called as soon as SOS starts, initializes currentJobRunning to -1 (dummy value) to indicate that no job is running yet
-//Instatiates the CPU scheduler and memory manager before setting each memory location value to 0 (no jobs in memory yet)
+//Called as soon as SOS starts, initializes both currentJobRunning and currentJobIo to -1 (dummy value)
+//to indicate that no job is running yet and no job is currently doing IO
 void startup () {
 	currentJobRunning = -1;
-	cpuScheduler scheduler;
-	MemoryManager memory;
-	memory.initJobsArray (mem, 100);
+	currentJobIo = -1;
+	drumOrCore = -1;
 }
 
 //Called when a new job has entered the system - the job table is cleaned up, an instance of the Job class is created and
@@ -46,7 +48,7 @@ void startup () {
 void Crint (long &a, long p[]) {
 	bookKeep (p[5]);
 	refreshJobTable();
-	Job newJob = new Job (p);
+	Job newJob (p);
 	addToJobTable (newJob);
 	//job can only go on ready queue if it is in memory
 	swapper (newJob.getJobNumber());
@@ -137,8 +139,10 @@ void requestIo (long jobNumber) {
 		cout << "Job is not in jobTable" << endl;
 		return;
 	}
-	if (ioQueue.empty())
+	if (ioQueue.empty()) {
 		siodisk (jobNumber);
+		currentJobIo = jobNumber;
+	}
 	else
 		ioQueue.push(jobTable.at(jobIndex));
 	(jobTable.at(jobIndex)).setDoingIo(true);
@@ -256,22 +260,23 @@ void swapper (long jobNum) {
 	refreshJobTable ();
 	//Swap requested from drum (jobTable) into memory
 	if (memory.jobFit(jobTable.at(jobIndex), mem, 100) && !(jobTable.at(jobIndex)).getInMem()) {
+		drumOrCore = 0; //drum to core
 		memory.placeJob(jobTable.at(jobIndex), mem, 100);
 		readyQueue.push_back(jobTable.at(jobIndex));
-		siodrum ((jobTable.at(jobIndex)).getJobNumber(), (jobTable.at(jobIndex)).getJobSize(), (jobTable.at(jobIndex)).getMemoryLocation(), 0);
-		(jobTable.at(jobIndex)).setInMem(true);
+		siodrum ((jobTable.at(jobIndex)).getJobNumber(), (jobTable.at(jobIndex)).getJobSize(), (jobTable.at(jobIndex)).getMemoryLocation(), drumOrCore);
+		//(jobTable.at(jobIndex)).setInMem(true);
 	}
 	//Note that job is not in memory and wait for memory to free up
 	else if (!memory.jobFit(jobTable.at(jobIndex), mem, 100) && !(jobTable.at(jobIndex)).getInMem()) {
-		//memoryQueue.push(jobTable.at(jobIndex));
 		(jobTable.at(jobIndex)).setInMem(false);
 	}
 	//Swap requested from memory to drum
 	else {
 		if (!(jobTable.at(jobIndex)).getDoingIo() && (jobTable.at(jobIndex)).getInMem()) {
-			siodrum ((jobTable.at(jobIndex)).getJobNumber(), (jobTable.at(jobIndex)).getJobSize(), (jobTable.at(jobIndex)).getMemoryLocation(), 1);
+			drumOrCore = 1; //core to drum
+			siodrum ((jobTable.at(jobIndex)).getJobNumber(), (jobTable.at(jobIndex)).getJobSize(), (jobTable.at(jobIndex)).getMemoryLocation(), drumOrCore);
 			memory.removeJob(jobTable.at(jobIndex), mem, 100);
-			(jobTable.at(jobIndex)).setInMem(false);
+			//(jobTable.at(jobIndex)).setInMem(false);
 			(jobTable.at(jobIndex)).setMemoryLocation(-1);
 		}
 	}
