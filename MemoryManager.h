@@ -97,7 +97,7 @@ void placeJob(Job &j){
             // If there is enough contiguous memory, place job into array
 			if (counter == sizeOfJob){
                 
-                    std::cout << "Job H"<< j.jobNumber << " may fit, beginning with index " << i << " and ending at " << i + (counter-1) <<endl;
+                    std::cout << "Job #"<< j.jobNumber << " may fit, beginning with index " << i << " and ending at " << i + (counter-1) <<endl;
 
                     // Set memory location of job
                     j.memoryLocation=i;
