@@ -46,7 +46,7 @@ int getFreeMemory(){
 
 // Tests if Job will fit into memory
 bool jobFit(Job &j){
-    if (j.jobSize < getFreeMemory()){
+    if (j.getJobSize() < getFreeMemory()){
 		return true;
 	} else {
 		return false;
