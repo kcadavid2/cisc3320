@@ -145,7 +145,7 @@ void removeJob(Job &j){
 	int counter =0;
     
     // Pointer to the memory location of the job in the array 
-	int *pointer = (int*)&arr[j.getMemoryLocation];
+	int *pointer = (int*)&arr[j.getMemoryLocation()];
 
     // Test if job is in memory
     if (j.getInMem()){
