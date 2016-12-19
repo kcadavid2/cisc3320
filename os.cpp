@@ -15,6 +15,7 @@ queue<Job> ioQueue;
 cpuScheduler scheduler;
 MemoryManager memory;
 long drumOrCore;
+long ioQueueJobIndex;
 
 void startup ();
 void Crint (long &a, long p[]);
@@ -64,7 +65,7 @@ void Crint (long &a, long p[]) {
 void Svc (long &a, long p[]) {
 	bookKeep(p[5]);
 	long currentJobIndex = findByNumber(p[1]);
-	if (currentJobIndex == -1) {
+	if (jobIndex == -1) {
 		cout << "Job is not in jobTable" << endl;
 		return;
 	}
@@ -89,7 +90,6 @@ void Svc (long &a, long p[]) {
 
 void Tro(long &a, long p[]) {
 	bookKeep(p[5]);
-	long jobIndex = findByNumber (jobNumber);
 	if(!jobTable.at(jobIndex)).getDoingIO();//is job doing IO
 	   remJobFromJobTable(currentJobRunning);
 	else
@@ -109,23 +109,28 @@ void Drmint (long &a, long p[]){
 
 void Dskint (long &a, long p[]){
 	bookKeep(p[5]);
-	long ioQueueJobIndex;
 	ioQueueJobNext(); // set the index
 	
-	//if job has no more pending I/O requests, unblock it
-	if(!ioQueueJobIndex.getDoingIO();
-	   jobTable.at(currentJobIndex).setIsBlocked (false);
+	//if job has no more pending I/O requests, unblock it, setDoingIo to false
+	if(!jobTable.at(ioQueueJobIndex).getDoingIo(){
+	   jobTable.at(ioQueueJobIndex).setIsBlocked (false);
+	   jobTable.at(ioQueueJobIndex).setDoingIo(false);
+	}
 	
 	//if job is terminated and has no more pending I/O requests, remove it from job table
-	if(jobTable.at(jobIndex)).setIsTerminated(true); && (!jobTable.at(jobIndex)).getDoingIO();
-	   remJobFromJobTable (jobTable.at(jobIndex))
-	   
+	if(((jobTable.at(ioQueueJobIndex)).getIsTerminated(true)) && ((!jobTable.at(ioQueueJobIndex)).getDoingIo()))
+	   remJobFromJobTable (jobTable.at(ioQueueJobIndex));
+	
 	//remove the job from the top of the I/O queue   
 	ioQueue.pop();
+	currentJobIo = -1;
 	//as long as ioqueue is not empty, get the job index of the next job and send it to SOS
 	if (!ioQueue.empty()){
 		ioQueueJobNext();
-		siodisk(jobTable.at(currentJobIndex));
+		currentJobIo = jobTable.at(ioQueueJobIndex).getJobNumber;
+		
+		jobTable.at(ioQueueJobIndex).setDoingIo(true);
+		siodisk(jobTable.at(ioQueueJobIndex));
 	}
 	runJob (a, p, scheduler.scheduleCpu (readyQueue));
 	return;
@@ -135,7 +140,7 @@ void Dskint (long &a, long p[]){
 //waiting to do IO), then siodisk is called to initiate IO. Otherwise, job is pushed onto IO queue to wait for IO.
 //Whether job is currently doing IO or is waiting to do IO, the doingIo member variable of the corresponding Job class is set to true
 void requestIo (long jobNumber) {
-	long jobIndex = findByNumber (jobNumber);
+	long jobIndex = findByNumber(jobNumber);
 	if (jobIndex == -1) {
 		cout << "Job is not in jobTable" << endl;
 		return;
@@ -153,7 +158,7 @@ void requestIo (long jobNumber) {
 //a real job and the job is not waiting to do IO, the job is terminated and memory is deallocated using memory manager.
 //Otherwise, if jobNumber corresponds to a real job, terminate. Job table is cleaned up afterwards.
 void terminateJob (long jobNumber) {
-	long jobIndex = findByNumber (jobNumber);
+	long jobIndex = findByNumber(jobNumber);
 	if (jobNumber != -1 && !isOnIoQueue(jobNumber)) {
 		(jobTable.at(jobIndex)).setIsTerminated (true);
 		//DEALLOCATE MEMORY HERE!!!
@@ -198,7 +203,7 @@ void remJobFromJobTable (long position){
 //sets the job index of the job in the front of the IO Queue
 void ioQueueJobNext() {
     for(long i = 0; i < jobTable.size(); i++)
-        if (jobTable[i].findByNumber() == ioQueue.front())
+        if (jobTable[i] == ioQueue.front())
             ioQueueJobIndex = i;
 	return;
 }
