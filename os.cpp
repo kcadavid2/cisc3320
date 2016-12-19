@@ -34,8 +34,8 @@ void siodrum (long JobNum, long JobSize, long StartCoreAddr, long TransferDir);
 void remJobFromJobTable (long position);
 void ioQueueJobNext();
 
-//Called as soon as SOS starts, initializes both currentJobRunning and currentJobIo to -1 (dummy value)
-//to indicate that no job is running yet and no job is currently doing IO
+//Called as soon as SOS starts, initializes currentJobRunning, currentJobIo, and drumOrCore to -1 (dummy value)
+//to indicate that no job is running yet, no job is currently doing IO, and no job is being swapped in/out of memory
 void startup () {
 	currentJobRunning = -1;
 	currentJobIo = -1;
@@ -247,10 +247,11 @@ void refreshJobTable () {
 
 //Swapper determines which job to move into memory from the drum by first checking if job fits in memory and making sure that the
 //job is not in memory already. If criteria are met, swapper places job in memory, adds the job to the ready queue, calls siodrum
-//to initiate transfer, and sets the Job member variable inMem to true to specify job is now in memory.
+//to initiate transfer, and drumOrCore is set to 0 so that Drmint could use this information to set inMem variable in corresponding
+//Job instance for the job that was sent to the swapper.
 //If there is no room for the job in memory, the Job member variable inMem is set to false and the job must wait for a room to free up
 //Otherwise, the job must move from memory to the drum - swapper makes sure the job is in memory but not doing IO/waiting to do IO,
-//and calls siodrum to initiate transfer in appropriate direction as well as removes job from memory.
+//and calls siodrum to initiate transfer in appropriate direction as well as removes job from memory. drumOrCore is set to 1 for use by Drmint.
 void swapper (long jobNum) {
 	long jobIndex = findByNumber(jobNum);
 	if (jobIndex == -1) {
@@ -274,10 +275,10 @@ void swapper (long jobNum) {
 	else {
 		if (!(jobTable.at(jobIndex)).getDoingIo() && (jobTable.at(jobIndex)).getInMem()) {
 			drumOrCore = 1; //core to drum
-			siodrum ((jobTable.at(jobIndex)).getJobNumber(), (jobTable.at(jobIndex)).getJobSize(), (jobTable.at(jobIndex)).getMemoryLocation(), drumOrCore);
 			memory.removeJob(jobTable.at(jobIndex), mem, 100);
 			//(jobTable.at(jobIndex)).setInMem(false);
 			(jobTable.at(jobIndex)).setMemoryLocation(-1);
+			siodrum ((jobTable.at(jobIndex)).getJobNumber(), (jobTable.at(jobIndex)).getJobSize(), (jobTable.at(jobIndex)).getMemoryLocation(), drumOrCore);
 		}
 	}
 }
