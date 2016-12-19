@@ -6,20 +6,18 @@
 #include "MemoryManager.h"
 using namespace std;
 
-//Switch job table to array since need to set max capacity=50? Job jobTable[50];
 vector<Job> jobTable;
 long mem[100];
 long currentJobRunning;
 long currentJobIo;
 queue<Job> readyQueue;
 queue<Job> ioQueue;
-//queue<Job> memoryQueue;
 
 void startup ();
 void Crint (long &a, long p[]);
 void Svc (long &a, long p[]);
-void Tro(long &a, long p[])
-void Dskint(long &a, long p[])
+void Tro(long &a, long p[]);
+void Dskint(long &a, long p[]);
 long findByNumber (long jobNumber);
 void addToJobTable (Job newJob);
 void bookKeep (long time);
@@ -33,15 +31,18 @@ void siodrum (long JobNum, long JobSize, long StartCoreAddr, long TransferDir);
 void remJobFromJobTable (long position);
 void ioQueueJobNext();
 
+//Called as soon as SOS starts, initializes currentJobRunning to -1 (dummy value) to indicate that no job is running yet
+//Instatiates the CPU scheduler and memory manager before setting each memory location value to 0 (no jobs in memory yet)
 void startup () {
 	currentJobRunning = -1;
 	cpuScheduler scheduler;
 	MemoryManager memory;
 	memory.initJobsArray (mem, 100);
-//	for (long i = 0; i < 100; i++)
-//		mem[i] = 0;
 }
 
+//Called when a new job has entered the system - the job table is cleaned up, an instance of the Job class is created and
+//added to the job table with relevant job information, the swapper is called to attempt to move job into memory, and lastly,
+//dispatcher is called to run a job chosen by the STS
 void Crint (long &a, long p[]) {
 	bookKeep (p[5]);
 	refreshJobTable();
@@ -52,9 +53,14 @@ void Crint (long &a, long p[]) {
 	runJob (a, p, scheduler.scheduleCpu (readyQueue));
 }
 
+//Job needs service - firstly, the index of job in the job table is retrieved. Depending on the value of a, Svc behaves differently
+//If a=5, job is requesting termination (memory is deallocated and isTerminated is set to true for specified job
+//If a=6, job is requesting IO (job is placed on IO queue if queue is not empty, otherwise siodisk is called. doingIo is set to
+//true in either case)
+//If a=7, job is requesting to be blocked until pending IO is completed (checks if job is doing IO or is on IO queue and blocks if so)
+//Lastly, dispatcher runs a new job with help of scheduler
 void Svc (long &a, long p[]) {
 	bookKeep(p[5]);
-	//vector<Job>::iterator it = jobTable.begin();
 	long currentJobIndex = findByNumber(p[1]);
 	if (jobIndex == -1) {
 		cout << "Job is not in jobTable" << endl;
@@ -62,15 +68,15 @@ void Svc (long &a, long p[]) {
 	}
 	switch (a) {
 		case '5':
-			//take job off ready queue, take job out of jobtable, deallocate memory
+			//Take job off ready queue, take job out of job table, deallocate memory
 			terminateJob (p[1]);
 			break;
 		case '6':
-			//take job off ready queue, add to ioqueue, call appropriate sos function
+			//Take job off ready queue, add to IO Queue, call appropriate SOS function
 			requestIo (p[1]);
 			break;
 		case '7':
-			//if job is currently doing IO or is on IO Queue, block
+			//If job is currently doing IO or is on IO Queue, block
 			if (jobTable.at(currentJobIndex).getDoingIo() || isOnIoQueue(p[1]))
 				jobTable.at(currentJobIndex).setIsBlocked (true);
 			break;
@@ -121,7 +127,10 @@ void Dskint (long &a, long p[]){
 	runJob (a, p, scheduler.scheduleCpu (readyQueue));
 	return;
 }
-		   
+
+//Job with job number jobNumber is requesting IO - begins by finding its index in job table. If IO queue is empty (no jobs are
+//waiting to do IO), then siodisk is called to initiate IO. Otherwise, job is pushed onto IO queue to wait for IO.
+//Whether job is currently doing IO or is waiting to do IO, the doingIo member variable of the corresponding Job class is set to true
 void requestIo (long jobNumber) {
 	long jobIndex = findByNumber(jobNumber);
 	if (jobIndex == -1) {
@@ -135,6 +144,9 @@ void requestIo (long jobNumber) {
 	(jobTable.at(jobIndex)).setDoingIo(true);
 }
 
+//Job with job number jobNumber is requesting termination - begins by finding its index in job table. If jobNumber corresponds to
+//a real job and the job is not waiting to do IO, the job is terminated and memory is deallocated using memory manager.
+//Otherwise, if jobNumber corresponds to a real job, terminate. Job table is cleaned up afterwards.
 void terminateJob (long jobNumber) {
 	long jobIndex = findByNumber(jobNumber);
 	if (jobNumber != -1 && !isOnIoQueue(jobNumber)) {
@@ -149,7 +161,6 @@ void terminateJob (long jobNumber) {
 
 //Returns index of job in the job table
 long findByNumber (long jobNumber) {
-	//vector<Job>::iterator it = jobTable.begin();
 	for (long i = 0; i < jobTable.size(); i++) {
 		if ((jobTable.at(i)).getJobNumber() == jobNumber)
 			return i;
@@ -157,6 +168,7 @@ long findByNumber (long jobNumber) {
 	return -1;
 }
 
+//Returns true if job with job number jobNumber is on the IO queue. Otherwise, returns false.
 bool isOnIoQueue (long jobNumber) {
 	for (vector<Job>::iterator i = ioQueue.begin(); i != ioQueue.end(); i++) {
 		if (ioQueue.at(*i) == jobNumber)
@@ -165,6 +177,7 @@ bool isOnIoQueue (long jobNumber) {
 	return false;
 }
 
+//Adds a new job to job table
 void addToJobTable (Job newJob) {
 	long index = newJob.getJobNumber();
 	vector<Job>::iterator it = jobTable.begin();
@@ -185,9 +198,9 @@ void ioQueueJobNext() {
 	return;
 }
 
+//Tracks state of job at beginning of interrupt by tracking time that interrupt occurred
 void bookKeep (long time) {
 	if (currentJobRunning != -1) {
-		//vector<Job>::iterator it = jobTable.begin();
 		long timeSpent = time - (jobTable.at(currentJobRunning)).getCurrentTime();
 		(jobTable.at(currentJobRunning)).setCurrentTime((jobTable.at(currentJobRunning)).getCurrentTime() + timeSpent);
 		//(jobTable.at(currentJobRunning)).setMaxCpu((jobTable.at(currentJobRunning)).getMaxCpu() - timeSpent);
@@ -210,28 +223,30 @@ void runJob (long &a, long p[], Job toRun) {
 	return;
 }
 
+//Cleans up the job table by removing any job that has been terminated and attempts to find space in memory for a job waiting to run
 void refreshJobTable () {
 	for (long i = 0; i < jobTable.size(); i++) {
 		vector<Job>::iterator it = jobTable.begin();
 		if ((jobTable.at(i)).getIsTerminated())
 			(jobTable.at(i)).erase(it + i);
 	}
-/*	queue<Job> memQueue = memoryQueue;
-	while (!memQueue.empty()) {
-		if (memory.jobFit(memQueue.front()) && !(memQueue.front()).getInMem())
-			swapper ((memQueue.front().getJobNumber()));
-		memQueue.pop();
-	}*/
 	
 	//Finding space without memory queue
 	vector<Job>::iterator it = jobTable.begin();
 	while (it != jobTable.end()) {
-		if (!(jobTable.at(it)).getInMem())
-			if (!(jobTable.at(it)).getIsBlocked() && !(jobTable.at(it)).getDoingIo() && !(jobTable.at(it)).getIsTerminated())
-				swapper((jobTable.at(it)).getJobNumber());
+		if (!(jobTable.at(it)).getInMem() && memory.jobFit(jobTable.at(*it), mem, 100))
+			if (!(jobTable.at(*it)).getIsBlocked() && !(jobTable.at(*it)).getDoingIo() && !(jobTable.at(*it)).getIsTerminated())
+				swapper((jobTable.at(*it)).getJobNumber());
+		it++;
 	}
 }
 
+//Swapper determines which job to move into memory from the drum by first checking if job fits in memory and making sure that the
+//job is not in memory already. If criteria are met, swapper places job in memory, adds the job to the ready queue, calls siodrum
+//to initiate transfer, and sets the Job member variable inMem to true to specify job is now in memory.
+//If there is no room for the job in memory, the Job member variable inMem is set to false and the job must wait for a room to free up
+//Otherwise, the job must move from memory to the drum - swapper makes sure the job is in memory but not doing IO/waiting to do IO,
+//and calls siodrum to initiate transfer in appropriate direction as well as removes job from memory.
 void swapper (long jobNum) {
 	long jobIndex = findByNumber(jobNum);
 	if (jobIndex == -1) {
