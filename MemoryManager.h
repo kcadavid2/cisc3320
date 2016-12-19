@@ -129,7 +129,7 @@ void placeJob(Job &j){
                     continue;
 			     }
 		      } else {
-			         std::cout << "Job with id: " << j.id << " cannot be placed into memory @ " << i <<endl;
+			         std::cout << "Job with id: " << j.jobNumber << " cannot be placed into memory @ " << i <<endl;
 			         continue;
 		      }
 	}
