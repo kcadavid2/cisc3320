@@ -41,7 +41,7 @@ int getFreeMemory(){
 
 	blocks = blocks*1000;
     
-    return  memoryBlocks;
+    return  blocks;
 }
 
 // Tests if Job will fit into memory
@@ -158,13 +158,13 @@ void removeJob(Job &j){
             *pointer=0;
             
             // Increment pointer to memory location of the job within the array
-            point++;
+            pointer++;
             
             // Increment counter 
             counter++;
 	   }
         // Set pointer to null
-        point = NULL;
+        pointer = NULL;
     }
     
     // Take job out of memory
