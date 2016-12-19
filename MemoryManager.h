@@ -77,16 +77,16 @@ void placeJob(Job &j){
 	int jId = j.getJobNumber();
 
     // Pointer to beginning of jobs array
-	int *n = (int*)&arr[0];
+	int *n = (int*)&arrayOfJobs[0];
 
-	for (int i=0; i<arrSize-sizeOfJob; i++){
+	for (int i=0; i<memoryChunk-sizeOfJob; i++){
 
 		counter =0;
         
         // If current array position doesnt have jobNumber
-		if (arr[i] == 0){
+		if (arrayOfJobs[i] == 0){
             
-			n = (int*)&arr[i];
+			n = (int*)&arrayOfJobs[i];
             
             // Loop to find contiguous memory slots
 			while (*n==0 && counter!=sizeOfJob){
@@ -103,7 +103,7 @@ void placeJob(Job &j){
                     j.setMemoryLocation(i);
 
                     // Set pointer to first memory address locaction  of job
-                    n = (int*)&arr[i];
+                    n = (int*)&arrayOfJobs[i];
 
                     // Places jobNumber into contiguous memory slots
                     for (int j=i-1; j <(i+(counter-1));j++){
@@ -145,7 +145,7 @@ void removeJob(Job &j){
 	int counter =0;
     
     // Pointer to the memory location of the job in the array 
-	int *pointer = (int*)&arr[j.getMemoryLocation()];
+	int *pointer = (int*)&arrayOfJobs[j.getMemoryLocation()];
 
     // Test if job is in memory
     if (j.getInMem()){
