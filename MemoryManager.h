@@ -73,8 +73,8 @@ void placeJob(Job &j){
 	int counter;
 
     // Store size and jobNumber
-	int sizeOfJob = j.jobSize;
-	int jId = j.jobNumber;
+	int sizeOfJob = j.getJobSize();
+	int jId = j.getJobNumber();
 
     // Pointer to beginning of jobs array
 	int *n = (int*)&arr[0];
@@ -97,10 +97,10 @@ void placeJob(Job &j){
             // If there is enough contiguous memory, place job into array
 			if (counter == sizeOfJob){
                 
-                    std::cout << "Job #"<< j.jobNumber << " may fit, beginning with index " << i << " and ending at " << i + (counter-1) <<endl;
+                    std::cout << "Job #"<< j.getJobNumber() << " may fit, beginning with index " << i << " and ending at " << i + (counter-1) <<endl;
 
                     // Set memory location of job
-                    j.memoryLocation=i;
+                    j.setMemoryLocation(i);
 
                     // Set pointer to first memory address locaction  of job
                     n = (int*)&arr[i];
@@ -118,7 +118,7 @@ void placeJob(Job &j){
                     printMemoryTable();
                     
                     // Set in memory for job to ture
-                    j.inMem =true;
+                    j.setInMem(true);
                 
                     // Break out of loop
                     break;
@@ -129,7 +129,7 @@ void placeJob(Job &j){
                     continue;
 			     }
 		      } else {
-			         std::cout << "Job with id: " << j.jobNumber << " cannot be placed into memory @ " << i <<endl;
+			         std::cout << "Job with id: " << j.getJobNumber() << " cannot be placed into memory @ " << i <<endl;
 			         continue;
 		      }
 	}
@@ -145,13 +145,13 @@ void removeJob(Job &j){
 	int counter =0;
     
     // Pointer to the memory location of the job in the array 
-	int *pointer = (int*)&arr[j.memLocation];
+	int *pointer = (int*)&arr[j.getMemoryLocation];
 
     // Test if job is in memory
-    if (j.inMem){
+    if (j.getInMem()){
            
         // Compare counter to jobSize
-        while (counter != j.jobSize){
+        while (counter != j.getJobSize()){
            
             // Set memory location to 0
             // Removes jobID# from current array location
@@ -168,7 +168,7 @@ void removeJob(Job &j){
     }
     
     // Take job out of memory
-    j.inMem = false;
+    j.setInMem(false);
 
 }
    
