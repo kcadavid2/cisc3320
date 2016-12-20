@@ -88,9 +88,10 @@ void Svc (long &a, long p[]) {
 	return;
 }
 
+//Timer ran out: check if job is doing IO. if its not, remove it from job table, if it is, terminate job
 void Tro(long &a, long p[]) {
 	bookKeep(p[5]);
-	if(!jobTable.at(jobIndex)).getDoingIO();//is job doing IO
+	if(!jobTable.at(jobIndex)).getDoingIO();
 	   remJobFromJobTable(currentJobRunning);
 	else
 	   jobTable.at(jobIndex)).setIsTerminated(true);//else terminate job
@@ -98,10 +99,15 @@ void Tro(long &a, long p[]) {
 	return;
 }
 
+//swap has completed
 void Drmint (long &a, long p[]){
 	bookKeep(p[5]);
 	
-	//**drum is no longer busy; job is now in memory**
+	//check if swapped into memory; set setInMem accordingly
+	if(drumOrCore == 0)
+		jobTable.at(jobIndex)).setInMem(true);
+	else if(drumOrCore == 1)
+		jobTable.at(jobIndex)).setInMem(false);
 	
 	runJob (a, p, scheduler.scheduleCpu (readyQueue));
 	return;
@@ -128,7 +134,6 @@ void Dskint (long &a, long p[]){
 	if (!ioQueue.empty()){
 		ioQueueJobNext();
 		currentJobIo = jobTable.at(ioQueueJobIndex).getJobNumber;
-		
 		jobTable.at(ioQueueJobIndex).setDoingIo(true);
 		siodisk(jobTable.at(ioQueueJobIndex));
 	}
