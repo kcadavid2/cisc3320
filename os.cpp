@@ -89,52 +89,57 @@ void Svc (long &a, long p[]) {
 	return;
 }
 
-void Tro(long &a, long p[]) {
-	bookKeep(p[5]);
-	long jobIndex = findByNumber(p[1]);
-	if(!(jobTable.at(jobIndex)).getDoingIo())//is job doing IO
+//Timer ran out: check if job is doing IO. if its not, remove it from job table, if it is, terminate job
+void Tro(long &a, long p[]){
+    bookKeep(p[5]);
+    if(!jobTable.at(jobIndex)).getDoingIO();
 	   remJobFromJobTable(currentJobRunning);
-	else
-	   (jobTable.at(jobIndex)).setIsTerminated(true);//else terminate job
-	runJob (a, p, scheduler.scheduleCpu (readyQueue));
-	return;
+    else
+        jobTable.at(jobIndex)).setIsTerminated(true);//else terminate job
+    runJob (a, p, scheduler.scheduleCpu (readyQueue));
+    return;
 }
 
+//swap has completed
 void Drmint (long &a, long p[]){
-	bookKeep(p[5]);
-	
-	//**drum is no longer busy; job is now in memory**
-	
-	runJob (a, p, scheduler.scheduleCpu (readyQueue));
-	return;
+    bookKeep(p[5]);
+    
+    //check if swapped into memory; set setInMem accordingly
+    if(drumOrCore == 0)
+        jobTable.at(jobIndex)).setInMem(true);
+    else if(drumOrCore == 1)
+        jobTable.at(jobIndex)).setInMem(false);
+    
+    runJob (a, p, scheduler.scheduleCpu (readyQueue));
+    return;
 }
 
 void Dskint (long &a, long p[]){
-	bookKeep(p[5]);
-	ioQueueJobNext(); // set the index
-	
-	//if job has no more pending I/O requests, unblock it, setDoingIo to false
-	if(!jobTable.at(ioQueueJobIndex).getDoingIo()) {
-	   jobTable.at(ioQueueJobIndex).setIsBlocked (false);
-	   jobTable.at(ioQueueJobIndex).setDoingIo(false);
-	}
-	
-	//if job is terminated and has no more pending I/O requests, remove it from job table
-	if(((jobTable.at(ioQueueJobIndex)).getIsTerminated()) && (!(jobTable.at(ioQueueJobIndex)).getDoingIo()))
-	   remJobFromJobTable (ioQueueJobIndex);
-	
-	//remove the job from the top of the I/O queue   
-	ioQueue.pop();
-	currentJobIo = -1;
-	//as long as ioqueue is not empty, get the job index of the next job and send it to SOS
-	if (!ioQueue.empty()){
-		ioQueueJobNext();
-		currentJobIo = jobTable.at(ioQueueJobIndex).getJobNumber();
-		jobTable.at(ioQueueJobIndex).setDoingIo(true);
-		siodisk(jobTable.at(ioQueueJobIndex).getJobNumber());
-	}
-	runJob (a, p, scheduler.scheduleCpu (readyQueue));
-	return;
+    bookKeep(p[5]);
+    ioQueueJobNext(); // set the index
+    
+    //if job has no more pending I/O requests, unblock it, setDoingIo to false
+    if(!jobTable.at(ioQueueJobIndex).getDoingIo(){
+        jobTable.at(ioQueueJobIndex).setIsBlocked (false);
+        jobTable.at(ioQueueJobIndex).setDoingIo(false);
+    }
+       
+       //if job is terminated and has no more pending I/O requests, remove it from job table
+       if(((jobTable.at(ioQueueJobIndex)).getIsTerminated(true)) && ((!jobTable.at(ioQueueJobIndex)).getDoingIo()))
+       remJobFromJobTable (jobTable.at(ioQueueJobIndex));
+       
+       //remove the job from the top of the I/O queue
+       ioQueue.pop();
+       currentJobIo = -1;
+       //as long as ioqueue is not empty, get the job index of the next job and send it to SOS
+       if (!ioQueue.empty()){
+           ioQueueJobNext();
+           currentJobIo = jobTable.at(ioQueueJobIndex).getJobNumber;
+           jobTable.at(ioQueueJobIndex).setDoingIo(true);
+           siodisk(jobTable.at(ioQueueJobIndex));
+       }
+       runJob (a, p, scheduler.scheduleCpu (readyQueue));
+       return;
 }
 
 //Job with job number jobNumber is requesting IO - begins by finding its index in job table. If IO queue is empty (no jobs are
@@ -202,12 +207,12 @@ void remJobFromJobTable (long position){
 	jobTable.erase(jobTable.begin()+position);
 	return;
 }
-		   
+       
 //sets the job index of the job in the front of the IO Queue
 void ioQueueJobNext() {
-    for(long i = 0; i < jobTable.size(); i++)
-        if (jobTable[i] == ioQueue.front())
-            ioQueueJobIndex = i;
+	for(long i = 0; i < jobTable.size(); i++)
+		if (jobTable[i] == ioQueue.front())
+			ioQueueJobIndex = i;
 	return;
 }
 
