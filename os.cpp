@@ -34,6 +34,7 @@ void siodisk (long JobNum);
 void siodrum (long JobNum, long JobSize, long StartCoreAddr, long TransferDir);
 void remJobFromJobTable (long position);
 void ioQueueJobNext();
+void requestIo (long jobNumber);
 
 //Called as soon as SOS starts, initializes currentJobRunning, currentJobIo, and drumOrCore to -1 (dummy value)
 //to indicate that no job is running yet, no job is currently doing IO, and no job is being swapped in/out of memory
@@ -65,7 +66,7 @@ void Crint (long &a, long p[]) {
 void Svc (long &a, long p[]) {
 	bookKeep(p[5]);
 	long currentJobIndex = findByNumber(p[1]);
-	if (jobIndex == -1) {
+	if (currentJobIndex == -1) {
 		cout << "Job is not in jobTable" << endl;
 		return;
 	}
@@ -88,26 +89,21 @@ void Svc (long &a, long p[]) {
 	return;
 }
 
-//Timer ran out: check if job is doing IO. if its not, remove it from job table, if it is, terminate job
 void Tro(long &a, long p[]) {
 	bookKeep(p[5]);
-	if(!jobTable.at(jobIndex)).getDoingIO();
+	long jobIndex = findByNumber(p[1]);
+	if(!(jobTable.at(jobIndex)).getDoingIo())//is job doing IO
 	   remJobFromJobTable(currentJobRunning);
 	else
-	   jobTable.at(jobIndex)).setIsTerminated(true);//else terminate job
+	   (jobTable.at(jobIndex)).setIsTerminated(true);//else terminate job
 	runJob (a, p, scheduler.scheduleCpu (readyQueue));
 	return;
 }
 
-//swap has completed
 void Drmint (long &a, long p[]){
 	bookKeep(p[5]);
 	
-	//check if swapped into memory; set setInMem accordingly
-	if(drumOrCore == 0)
-		jobTable.at(jobIndex)).setInMem(true);
-	else if(drumOrCore == 1)
-		jobTable.at(jobIndex)).setInMem(false);
+	//**drum is no longer busy; job is now in memory**
 	
 	runJob (a, p, scheduler.scheduleCpu (readyQueue));
 	return;
@@ -118,14 +114,14 @@ void Dskint (long &a, long p[]){
 	ioQueueJobNext(); // set the index
 	
 	//if job has no more pending I/O requests, unblock it, setDoingIo to false
-	if(!jobTable.at(ioQueueJobIndex).getDoingIo(){
+	if(!jobTable.at(ioQueueJobIndex).getDoingIo()) {
 	   jobTable.at(ioQueueJobIndex).setIsBlocked (false);
 	   jobTable.at(ioQueueJobIndex).setDoingIo(false);
 	}
 	
 	//if job is terminated and has no more pending I/O requests, remove it from job table
-	if(((jobTable.at(ioQueueJobIndex)).getIsTerminated(true)) && ((!jobTable.at(ioQueueJobIndex)).getDoingIo()))
-	   remJobFromJobTable (jobTable.at(ioQueueJobIndex));
+	if(((jobTable.at(ioQueueJobIndex)).getIsTerminated()) && (!(jobTable.at(ioQueueJobIndex)).getDoingIo()))
+	   remJobFromJobTable (ioQueueJobIndex);
 	
 	//remove the job from the top of the I/O queue   
 	ioQueue.pop();
@@ -133,9 +129,9 @@ void Dskint (long &a, long p[]){
 	//as long as ioqueue is not empty, get the job index of the next job and send it to SOS
 	if (!ioQueue.empty()){
 		ioQueueJobNext();
-		currentJobIo = jobTable.at(ioQueueJobIndex).getJobNumber;
+		currentJobIo = jobTable.at(ioQueueJobIndex).getJobNumber();
 		jobTable.at(ioQueueJobIndex).setDoingIo(true);
-		siodisk(jobTable.at(ioQueueJobIndex));
+		siodisk(jobTable.at(ioQueueJobIndex).getJobNumber());
 	}
 	runJob (a, p, scheduler.scheduleCpu (readyQueue));
 	return;
@@ -167,7 +163,7 @@ void terminateJob (long jobNumber) {
 	if (jobNumber != -1 && !isOnIoQueue(jobNumber)) {
 		(jobTable.at(jobIndex)).setIsTerminated (true);
 		//DEALLOCATE MEMORY HERE!!!
-		memory.removeJob(jobTable.at(jobIndex), mem, 100);
+		memory.removeJob(jobTable.at(jobIndex));
 	}
 	else if (jobNumber != -1)
 		(jobTable.at(jobIndex)).setIsTerminated (true);
@@ -185,9 +181,11 @@ long findByNumber (long jobNumber) {
 
 //Returns true if job with job number jobNumber is on the IO queue. Otherwise, returns false.
 bool isOnIoQueue (long jobNumber) {
-	for (vector<Job>::iterator i = ioQueue.begin(); i != ioQueue.end(); i++) {
+	vector<Job>::iterator i = ioQueue.begin();
+	while (i != ioQueue.end()) {
 		if (ioQueue.at(*i) == jobNumber)
 			return true;
+		i++;
 	}
 	return false;
 }
@@ -200,7 +198,7 @@ void addToJobTable (Job newJob) {
 }
 	   
 void remJobFromJobTable (long position){
-	removeJob((jobTable.at(currentJobRunning)));
+	memory.removeJob(jobTable.at(currentJobRunning));
 	jobTable.erase(jobTable.begin()+position);
 	return;
 }
@@ -224,7 +222,7 @@ void bookKeep (long time) {
 
 //Dispatcher: sets CPU registers and runs job
 void runJob (long &a, long p[], Job toRun) {
-	if (readyQueue.empty() || toRun == NULL)
+	if (readyQueue.empty() || toRun.getJobNumber() == -1)
 		a = 1;
 	else {
 		a = 2;
@@ -243,13 +241,13 @@ void refreshJobTable () {
 	for (long i = 0; i < jobTable.size(); i++) {
 		vector<Job>::iterator it = jobTable.begin();
 		if ((jobTable.at(i)).getIsTerminated())
-			(jobTable.at(i)).erase(it + i);
+			(jobTable.erase(it + i));
 	}
 	
 	//Finding space without memory queue
 	vector<Job>::iterator it = jobTable.begin();
 	while (it != jobTable.end()) {
-		if (!(jobTable.at(it)).getInMem() && memory.jobFit(jobTable.at(*it), mem, 100))
+		if (!(jobTable.at(it)).getInMem() && memory.jobFit(jobTable.at(*it)))
 			if (!(jobTable.at(*it)).getIsBlocked() && !(jobTable.at(*it)).getDoingIo() && !(jobTable.at(*it)).getIsTerminated())
 				swapper((jobTable.at(*it)).getJobNumber());
 		it++;
@@ -271,22 +269,22 @@ void swapper (long jobNum) {
 	}
 	refreshJobTable ();
 	//Swap requested from drum (jobTable) into memory
-	if (memory.jobFit(jobTable.at(jobIndex), mem, 100) && !(jobTable.at(jobIndex)).getInMem()) {
+	if (memory.jobFit(jobTable.at(jobIndex)) && !(jobTable.at(jobIndex)).getInMem()) {
 		drumOrCore = 0; //drum to core
-		memory.placeJob(jobTable.at(jobIndex), mem, 100);
+		memory.placeJob(jobTable.at(jobIndex));
 		readyQueue.push_back(jobTable.at(jobIndex));
 		siodrum ((jobTable.at(jobIndex)).getJobNumber(), (jobTable.at(jobIndex)).getJobSize(), (jobTable.at(jobIndex)).getMemoryLocation(), drumOrCore);
 		//(jobTable.at(jobIndex)).setInMem(true);
 	}
 	//Note that job is not in memory and wait for memory to free up
-	else if (!memory.jobFit(jobTable.at(jobIndex), mem, 100) && !(jobTable.at(jobIndex)).getInMem()) {
+	else if (!memory.jobFit(jobTable.at(jobIndex)) && !(jobTable.at(jobIndex)).getInMem()) {
 		(jobTable.at(jobIndex)).setInMem(false);
 	}
 	//Swap requested from memory to drum
 	else {
 		if (!(jobTable.at(jobIndex)).getDoingIo() && (jobTable.at(jobIndex)).getInMem()) {
 			drumOrCore = 1; //core to drum
-			memory.removeJob(jobTable.at(jobIndex), mem, 100);
+			memory.removeJob(jobTable.at(jobIndex));
 			//(jobTable.at(jobIndex)).setInMem(false);
 			(jobTable.at(jobIndex)).setMemoryLocation(-1);
 			siodrum ((jobTable.at(jobIndex)).getJobNumber(), (jobTable.at(jobIndex)).getJobSize(), (jobTable.at(jobIndex)).getMemoryLocation(), drumOrCore);
