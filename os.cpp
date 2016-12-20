@@ -92,10 +92,11 @@ void Svc (long &a, long p[]) {
 //Timer ran out: check if job is doing IO. if its not, remove it from job table, if it is, terminate job
 void Tro(long &a, long p[]){
     bookKeep(p[5]);
-    if(!jobTable.at(jobIndex)).getDoingIO();
+    long jobIndex = findByNumber(p[1]);
+    if(!(jobTable.at(jobIndex)).getDoingIo())
 	   remJobFromJobTable(currentJobRunning);
     else
-        jobTable.at(jobIndex)).setIsTerminated(true);//else terminate job
+        terminateJob(p[1]);//else terminate job
     runJob (a, p, scheduler.scheduleCpu (readyQueue));
     return;
 }
@@ -119,13 +120,13 @@ void Dskint (long &a, long p[]){
     ioQueueJobNext(); // set the index
     
     //if job has no more pending I/O requests, unblock it, setDoingIo to false
-    if(!jobTable.at(ioQueueJobIndex).getDoingIo(){
+    if(!jobTable.at(ioQueueJobIndex).getDoingIo()){
         jobTable.at(ioQueueJobIndex).setIsBlocked (false);
         jobTable.at(ioQueueJobIndex).setDoingIo(false);
     }
        
        //if job is terminated and has no more pending I/O requests, remove it from job table
-       if(((jobTable.at(ioQueueJobIndex)).getIsTerminated(true)) && ((!jobTable.at(ioQueueJobIndex)).getDoingIo()))
+       if(((jobTable.at(ioQueueJobIndex)).getIsTerminated()) && (!(jobTable.at(ioQueueJobIndex)).getDoingIo()))
        remJobFromJobTable (jobTable.at(ioQueueJobIndex));
        
        //remove the job from the top of the I/O queue
@@ -136,7 +137,7 @@ void Dskint (long &a, long p[]){
            ioQueueJobNext();
            currentJobIo = jobTable.at(ioQueueJobIndex).getJobNumber;
            jobTable.at(ioQueueJobIndex).setDoingIo(true);
-           siodisk(jobTable.at(ioQueueJobIndex));
+           siodisk(jobTable.at(ioQueueJobIndex).getJobNumber());
        }
        runJob (a, p, scheduler.scheduleCpu (readyQueue));
        return;
@@ -186,11 +187,11 @@ long findByNumber (long jobNumber) {
 
 //Returns true if job with job number jobNumber is on the IO queue. Otherwise, returns false.
 bool isOnIoQueue (long jobNumber) {
-	vector<Job>::iterator i = ioQueue.begin();
-	while (i != ioQueue.end()) {
-		if (ioQueue.at(*i) == jobNumber)
+	queue<Job> tempIoQueue = ioQueue;
+	for (long i = 0; i < tempIoQueue.size(); i++) {
+		if ((tempIoQueue.front()).getJobNumber() == jobNumber)
 			return true;
-		i++;
+		tempIoQueue.pop();
 	}
 	return false;
 }
@@ -211,7 +212,7 @@ void remJobFromJobTable (long position){
 //sets the job index of the job in the front of the IO Queue
 void ioQueueJobNext() {
 	for(long i = 0; i < jobTable.size(); i++)
-		if (jobTable[i] == ioQueue.front())
+		if ((jobTable.at(i)).getJobNumber() == (ioQueue.front()).getJobNumber())
 			ioQueueJobIndex = i;
 	return;
 }
@@ -252,9 +253,9 @@ void refreshJobTable () {
 	//Finding space without memory queue
 	vector<Job>::iterator it = jobTable.begin();
 	while (it != jobTable.end()) {
-		if (!(jobTable.at(it)).getInMem() && memory.jobFit(jobTable.at(*it)))
-			if (!(jobTable.at(*it)).getIsBlocked() && !(jobTable.at(*it)).getDoingIo() && !(jobTable.at(*it)).getIsTerminated())
-				swapper((jobTable.at(*it)).getJobNumber());
+		if (!(*it).getInMem() && memory.jobFit(*it))
+			if (!(*it).getIsBlocked() && !(*it).getDoingIo() && !(*it).getIsTerminated())
+				swapper((*it).getJobNumber());
 		it++;
 	}
 }
