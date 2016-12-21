@@ -50,7 +50,6 @@ void startup () {
 //dispatcher is called to run a job chosen by the STS
 void Crint (long &a, long p[]) {
 	bookKeep (p[5]);
-	refreshJobTable();
 	Job newJob (p);
 	addToJobTable (newJob);
 	//job can only go on ready queue if it is in memory
@@ -197,11 +196,17 @@ bool isOnIoQueue (long jobNumber) {
 	return false;
 }
 
-//Adds a new job to job table
+//Adds a new job to job table if not already present
 void addToJobTable (Job newJob) {
 	long index = newJob.getJobNumber();
 	vector<Job>::iterator it = jobTable.begin();
-	jobTable.insert(it + index, newJob);
+	refreshJobTable();
+	while (it != jobTable.end()) {
+		if ((*it).getJobNumber() == newJob.getJobNumber())
+			return;
+		it++;
+	}
+	jobTable.push(newJob);
 }
 	   
 void remJobFromJobTable (long position){
