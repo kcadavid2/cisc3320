@@ -35,6 +35,7 @@ void siodrum (long JobNum, long JobSize, long StartCoreAddr, long TransferDir);
 void remJobFromJobTable (long position);
 void ioQueueJobNext();
 void requestIo (long jobNumber);
+void Drmint (long &a, long p[]);
 
 //Called as soon as SOS starts, initializes currentJobRunning, currentJobIo, and drumOrCore to -1 (dummy value)
 //to indicate that no job is running yet, no job is currently doing IO, and no job is being swapped in/out of memory
